@@ -10,7 +10,6 @@ export default function GetMaze(board:Board, width:number, height:number, scene:
     let holeArray:Mesh[] = [];
 
     let ground = MeshBuilder.CreateBox("ground", { width: width, depth:.1, height:height });
-    let holeCount = 0;
 
     board.boardArray.forEach((row, rowIdx) => {
         row.forEach((cell, cellIdx) => {
@@ -49,15 +48,12 @@ export default function GetMaze(board:Board, width:number, height:number, scene:
                 meshArray.push(wall);
                 sideCount++;
             }
-            if(sideCount > 2) {
-                if(holeCount % 2 ==0) {
-                    let hole = MeshBuilder.CreateCylinder(`hole_${rowIdx}_${cellIdx}`, { height:wallDepth, diameter:cellWidth/1.5})
-                    hole.position.x = cellX;
-                    hole.position.y = cellY;
-                    hole.rotation.x = 1.571;
-                    holeArray.push(hole);
-                }
-                holeCount++;
+            if(sideCount > 2 && Math.floor(Math.random() * 2) === 0) {
+                let hole = MeshBuilder.CreateCylinder(`hole_${rowIdx}_${cellIdx}`, { height:wallDepth, diameter:cellWidth/1.5})
+                hole.position.x = cellX;
+                hole.position.y = cellY;
+                hole.rotation.x = 1.571;
+                holeArray.push(hole);
             }
         });
     });
