@@ -15,12 +15,14 @@ export default function GetMaze(board:Board, width:number, height:number, scene:
         row.forEach((cell, cellIdx) => {
             let cellX = cellIdx * cellWidth - width/2 + cellWidth/2;
             let cellY = -rowIdx * cellHeight + height/2 - cellHeight/2;
+            cell.CenterX = cellX;
+            cell.CenterY = cellY;
             let sideCount = 0;
             if(cell.Top) {
                 let wall = MeshBuilder.CreateBox(`top_${rowIdx}_${cellIdx}`, {depth:wallDepth, width: cellWidth, height:wallThickness})
                 wall.position.x = cellX;
                 wall.position.y = cellY + cellHeight/2;
-                wall.position.z = -wallDepth;
+                wall.position.z = -wallDepth/2;
                 meshArray.push(wall);
                 sideCount++;
             }
@@ -28,7 +30,7 @@ export default function GetMaze(board:Board, width:number, height:number, scene:
                 let wall = MeshBuilder.CreateBox(`bottom_${rowIdx}_${cellIdx}`, {depth:wallDepth, width: cellWidth, height:wallThickness})
                 wall.position.x = cellX;
                 wall.position.y = cellY - cellHeight/2;
-                wall.position.z = -wallDepth;
+                wall.position.z = -wallDepth/2;
                 meshArray.push(wall);
                 sideCount++;
             }
@@ -36,15 +38,15 @@ export default function GetMaze(board:Board, width:number, height:number, scene:
                 let wall = MeshBuilder.CreateBox(`left_${rowIdx}_${cellIdx}`, {depth:wallDepth, width: wallThickness, height:cellHeight})
                 wall.position.x = cellX - cellWidth/2;
                 wall.position.y = cellY;
-                wall.position.z = -wallDepth;
+                wall.position.z = -wallDepth/2;
                 meshArray.push(wall);
                 sideCount++;
             }
             if(cell.Right) {
-                let wall = MeshBuilder.CreateBox(`left_${rowIdx}_${cellIdx}`, {depth:wallDepth, width: wallThickness, height:cellHeight})
+                let wall = MeshBuilder.CreateBox(`right_${rowIdx}_${cellIdx}`, {depth:wallDepth, width: wallThickness, height:cellHeight})
                 wall.position.x = cellX + cellWidth/2;
                 wall.position.y = cellY;
-                wall.position.z = -wallDepth;
+                wall.position.z = -wallDepth/2;
                 meshArray.push(wall);
                 sideCount++;
             }
@@ -54,6 +56,7 @@ export default function GetMaze(board:Board, width:number, height:number, scene:
                 hole.position.y = cellY;
                 hole.rotation.x = 1.571;
                 holeArray.push(hole);
+                cell.HoleInCenter = true;
             }
         });
     });

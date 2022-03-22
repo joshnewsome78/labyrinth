@@ -1,9 +1,12 @@
 
-class Cell {
+export class Cell {
     public Bottom:boolean = true;
     public Right:boolean = true;
     public Top:boolean = true;
     public Left:boolean = true;
+    public HoleInCenter:boolean = false;
+    public CenterX:number = 0;
+    public CenterY:number = 0;
 }
 
 export default class Board {

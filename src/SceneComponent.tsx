@@ -8,13 +8,10 @@ interface SceneComponentProps {
     sceneOptions?: SceneOptions;
     onRender: Function;
     onSceneReady: Function;
-    touchStart: TouchEventHandler<HTMLCanvasElement>;
-    touchEnd: TouchEventHandler<HTMLCanvasElement>;
-    touchMove: TouchEventHandler<HTMLCanvasElement>;
     id:string;
 }
 
-const SceneComponent: FC<SceneComponentProps & React.HTMLAttributes<string>> = ({ antialias, engineOptions, adaptToDeviceRatio, sceneOptions, onRender, onSceneReady, id, touchStart, touchEnd, touchMove, ...rest}) => {
+const SceneComponent: FC<SceneComponentProps & React.HTMLAttributes<string>> = ({ antialias, engineOptions, adaptToDeviceRatio, sceneOptions, onRender, onSceneReady, id, ...rest}) => {
   const reactCanvas = useRef(null);
 
   // set up basic engine and scene
@@ -53,7 +50,7 @@ const SceneComponent: FC<SceneComponentProps & React.HTMLAttributes<string>> = (
     };
   }, [antialias, engineOptions, adaptToDeviceRatio, sceneOptions, onRender, onSceneReady]);
 
-  return <canvas ref={reactCanvas} id={id} onTouchStart={touchStart} onTouchEnd={touchEnd} onTouchMove={touchMove} />;
+  return <canvas ref={reactCanvas} id={id} />;
 };
 
 export default SceneComponent;

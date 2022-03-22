@@ -1,21 +1,31 @@
 import React, { useEffect, TouchEvent } from 'react';
 import './App.css';
-import CreateBoard from './game/Board';
+import CreateBoard, { Cell } from './game/Board';
 import Board from './game/Board';
 import SceneComponent from './SceneComponent';
-import { CameraInputTypes, Color4, DirectionalLight, FreeCamera, HemisphericLight, Mesh, MeshBuilder, Nullable, Scene, Vector3 } from '@babylonjs/core';
+import { AmmoJSPlugin, ArcRotateCamera, CameraInputTypes, Color4, DirectionalLight, FreeCamera, HemisphericLight, IPhysicsEngine, Mesh, MeshBuilder, Nullable, PhysicsEngine, PhysicsImpostor, Scene, StandardMaterial, Texture, Tools, Vector3 } from '@babylonjs/core';
 import GetMaze from './game/GetMaze';
 
 function App() {
-
-  let box:Nullable<Mesh>;
-  let camera:FreeCamera;
+  let physicsEngine:Nullable<IPhysicsEngine>;
+  let camera:ArcRotateCamera;
 
   const onSceneReady = (scene:Scene) => {
     scene.clearColor = new Color4(0, 0, 0);
 
-    camera = new FreeCamera("camera1", new Vector3(.1, .1, -10), scene);
-    camera.setTarget(Vector3.Zero());
+    camera = new ArcRotateCamera("camera", 0, 0, 10, Vector3.Zero(), scene);
+    camera.setPosition(new Vector3(0,0,-10));
+    let canvas = scene.getEngine().getRenderingCanvas();
+
+    camera.attachControl(canvas);
+    camera.lowerBetaLimit = Tools.ToRadians(80);
+    camera.upperBetaLimit = Tools.ToRadians(100);
+    camera.lowerAlphaLimit = Tools.ToRadians(-100);
+    camera.upperAlphaLimit = Tools.ToRadians(-80);
+    camera.lowerRadiusLimit = 10;
+    camera.upperRadiusLimit = 10;
+    camera.inputs.remove(camera.inputs.attached.mousewheel);
+    
   
     const engine = scene.getEngine();
 
@@ -25,42 +35,46 @@ function App() {
     var height = 2 * d * Math.tan(fov / 2);
     var width = height * aspectRatio;
   
-    var light = new HemisphericLight("light", new Vector3(width/3, height/3, -20), scene);//new DirectionalLight("DirectionalLight", new Vector3(1, 1, 100), scene);
+    var light = new HemisphericLight("light", new Vector3(width/3, height/3, -20), scene);
     light.intensity = 0.55;
 
 
     const board = Board.GenerateRandomBoard(aspectRatio);
-    box = GetMaze(board, width * .9, height * .9, scene);
-  
-  };
-  
-  let direction = -1;
-  let axis = 'y';
-  
-  /**
-   * Will run on every frame render.  We are spinning the box on y-axis.
-   */
-  const onRender = (scene:Scene) => {
-    if (box !== undefined && box !== null) {
-      var deltaTimeInMillis = scene.getEngine().getDeltaTime();
-  
-      const rpm = 5;
-      //(box.rotation as any)[axis] += direction * (rpm / 60) * Math.PI * 2 * (deltaTimeInMillis / 1000);
-  
-      if((box.rotation as any)[axis] > 1/3) {
-        direction = -1;
-      }
-      else if((box.rotation as any)[axis] < -1/3) {
-        direction = 1;
-      }
-  
-    }
-  };
-  
-  let touching = false;
-  let touchX = 0;
-  let touchY = 0;
+    const maze = GetMaze(board, width * .9, height * .9, scene);
 
+    let marble = MeshBuilder.CreateSphere('marble',{diameter:width/(2 * board.boardWidth)}, scene);
+    let startCell = board.boardArray[0][Math.floor(Math.random() * board.boardWidth)];
+    while(startCell.HoleInCenter) {
+      startCell = board.boardArray[0][Math.floor(Math.random() * board.boardWidth)];
+    }
+    marble.position.x = startCell.CenterX;
+    marble.position.y = startCell.CenterY;
+    marble.position.z = -width/(2 * board.boardWidth);
+    const marbleMaterial = new StandardMaterial("marbleMaterial", scene);
+    marbleMaterial.diffuseTexture = new Texture("metal.jpg", scene);
+    marble.material = marbleMaterial;
+
+    
+    scene.enablePhysics(new Vector3(0,0,9.8), new AmmoJSPlugin());
+    physicsEngine = scene.getPhysicsEngine();
+
+    marble.physicsImpostor = new PhysicsImpostor(marble, PhysicsImpostor.SphereImpostor, {mass:1, friction:.1}, scene);
+
+    if(maze) {
+      //maze.setParent(null);
+      maze.physicsImpostor = new PhysicsImpostor(maze, PhysicsImpostor.MeshImpostor,{mass:0, friction:1},scene);
+    } 
+        
+
+  
+  };
+  
+  const onRender = (scene:Scene) => {
+    if(!physicsEngine) {
+      return;
+    }
+    physicsEngine.setGravity(new Vector3(-camera.position.x, -camera.position.y, -camera.position.z));
+  };
   
   return (
     <SceneComponent 
@@ -68,54 +82,8 @@ function App() {
       onSceneReady={onSceneReady} 
       onRender={onRender} 
       id="renderCanvas" 
-      touchStart={touchStart} 
-      touchEnd={touchEnd} 
-      touchMove={touchMove} 
       />
   );
-
-
-  function touchStart(e: TouchEvent<HTMLCanvasElement>) {
-    let touch = e.touches[0];
-        if (!touch) {
-            return;
-        }
-    touching = true;
-    touchX = touch.clientX;
-    touchY = touch.clientY;
-  }
-
-  function touchMove(e: TouchEvent<HTMLCanvasElement>) {
-    let touch = e.touches[0];
-    if (!touch) {
-        return;
-    }
-    rotateBox(Math.floor((touch.clientX - touchX)/10), Math.floor((touch.clientY - touchY)/10));
-  }
-
-  function touchEnd(e: TouchEvent<HTMLCanvasElement>) {
-    touching = false;
-    touchX = 0;
-    touchY = 0;
-    rotateBox(0,0);
-  }
-
-  function rotateBox(x:number, y:number) {
-    if(box === null) {
-      return;
-    }
-
-    const maxAngle = 35;
-
-    if(y > maxAngle) y = maxAngle;
-    if(y < -maxAngle) y = -maxAngle;
-    if(x > maxAngle) x = maxAngle;
-    if(x < -maxAngle) x = -maxAngle;
-
-    box.rotation.y = x * Math.PI / -180
-    box.rotation.x = y * Math.PI / -180
-
-  }
 }
 
 export default App;
