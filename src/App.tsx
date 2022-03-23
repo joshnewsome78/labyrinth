@@ -1,14 +1,37 @@
-import React, { useEffect, TouchEvent } from 'react';
+import React, { useEffect, TouchEvent, useState } from 'react';
 import './App.css';
 import CreateBoard, { Cell } from './game/Board';
 import Board from './game/Board';
 import SceneComponent from './SceneComponent';
 import { AmmoJSPlugin, ArcRotateCamera, CameraInputTypes, Color4, DirectionalLight, FreeCamera, HemisphericLight, IPhysicsEngine, Mesh, MeshBuilder, Nullable, PhysicsEngine, PhysicsImpostor, Scene, StandardMaterial, Texture, Tools, Vector3 } from '@babylonjs/core';
 import GetMaze from './game/GetMaze';
+import StartModal from './components/StartModal';
 
 function App() {
+
+  const [showStartModal, setShowStartModal] = useState(false);
+
   let physicsEngine:Nullable<IPhysicsEngine>;
   let camera:ArcRotateCamera;
+
+  useEffect(() => {
+    setShowStartModal(true);
+    return () => setShowStartModal(false);
+  },[]);
+
+  const handleStart = () => {
+    setShowStartModal(false);
+    if ( DeviceMotionEvent && typeof (DeviceMotionEvent as any).requestPermission === "function" ) {
+      (DeviceMotionEvent as any).requestPermission();
+    }
+
+    window.addEventListener("deviceorientation", (event) => {
+      if(physicsEngine && event.alpha && event.beta) {
+        physicsEngine.setGravity(new Vector3(-event.alpha, -event.beta, 9.8));
+      }
+    });
+
+  }
 
   const onSceneReady = (scene:Scene) => {
     scene.clearColor = new Color4(0, 0, 0);
@@ -61,12 +84,10 @@ function App() {
     marble.physicsImpostor = new PhysicsImpostor(marble, PhysicsImpostor.SphereImpostor, {mass:1, friction:.1}, scene);
 
     if(maze) {
-      //maze.setParent(null);
       maze.physicsImpostor = new PhysicsImpostor(maze, PhysicsImpostor.MeshImpostor,{mass:0, friction:1},scene);
     } 
         
 
-  
   };
   
   const onRender = (scene:Scene) => {
@@ -77,12 +98,15 @@ function App() {
   };
   
   return (
+    <>
     <SceneComponent 
       antialias 
       onSceneReady={onSceneReady} 
       onRender={onRender} 
       id="renderCanvas" 
       />
+      <StartModal show={showStartModal} closeHandler={handleStart} />
+      </>
   );
 }
 
