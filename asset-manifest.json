@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/labyrinth/static/css/main.196a9e3c.css",
+    "main.js": "/labyrinth/static/js/main.d74c1762.js",
+    "static/js/787.4b5f83c9.chunk.js": "/labyrinth/static/js/787.4b5f83c9.chunk.js",
+    "index.html": "/labyrinth/index.html",
+    "main.196a9e3c.css.map": "/labyrinth/static/css/main.196a9e3c.css.map",
+    "main.d74c1762.js.map": "/labyrinth/static/js/main.d74c1762.js.map",
+    "787.4b5f83c9.chunk.js.map": "/labyrinth/static/js/787.4b5f83c9.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.196a9e3c.css",
+    "static/js/main.d74c1762.js"
+  ]
+}
